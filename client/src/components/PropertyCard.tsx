@@ -2,19 +2,9 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Heart, Bed, Bath, Square, MapPin } from 'lucide-react';
+import type { Property } from '@shared/schema';
 
-interface PropertyCardProps {
-  id: string;
-  image: string;
-  price: string;
-  address: string;
-  city: string;
-  state: string;
-  beds: number;
-  baths: number;
-  sqft: string;
-  featured?: boolean;
-  newListing?: boolean;
+interface PropertyCardProps extends Property {
   onFavorite?: () => void;
   onClick?: () => void;
 }
@@ -22,14 +12,12 @@ interface PropertyCardProps {
 export default function PropertyCard({
   image,
   price,
-  address,
-  city,
-  state,
-  beds,
-  baths,
-  sqft,
-  featured,
-  newListing,
+  title,
+  location,
+  bedrooms,
+  bathrooms,
+  area,
+  type,
   onFavorite,
   onClick,
 }: PropertyCardProps) {
@@ -41,22 +29,15 @@ export default function PropertyCard({
     >
       <div className="relative aspect-[16/10] overflow-hidden">
         <img
-          src={image}
-          alt={address}
+          src={image || '/placeholder-property.jpg'}
+          alt={title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           data-testid="img-property"
         />
         <div className="absolute top-3 left-3 flex gap-2">
-          {featured && (
-            <Badge className="bg-secondary text-secondary-foreground" data-testid="badge-featured">
-              Featured
-            </Badge>
-          )}
-          {newListing && (
-            <Badge className="bg-primary text-primary-foreground" data-testid="badge-new">
-              New Listing
-            </Badge>
-          )}
+          <Badge className="bg-secondary text-secondary-foreground" data-testid="badge-type">
+            {type}
+          </Badge>
         </div>
         <Button
           size="icon"
@@ -75,30 +56,30 @@ export default function PropertyCard({
       <div className="p-4">
         <div className="mb-2">
           <p className="text-2xl font-semibold text-foreground" data-testid="text-price">
-            ${price}
+            {price}
           </p>
         </div>
         
         <div className="mb-3">
-          <p className="font-medium text-foreground" data-testid="text-address">{address}</p>
+          <p className="font-medium text-foreground" data-testid="text-address">{title}</p>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin className="h-3 w-3" />
-            <span data-testid="text-location">{city}, {state}</span>
+            <span data-testid="text-location">{location}</span>
           </div>
         </div>
         
         <div className="flex items-center gap-4 text-sm text-muted-foreground border-t pt-3">
           <div className="flex items-center gap-1" data-testid="text-beds">
             <Bed className="h-4 w-4" />
-            <span>{beds} Beds</span>
+            <span>{bedrooms} Beds</span>
           </div>
           <div className="flex items-center gap-1" data-testid="text-baths">
             <Bath className="h-4 w-4" />
-            <span>{baths} Baths</span>
+            <span>{bathrooms} Baths</span>
           </div>
           <div className="flex items-center gap-1" data-testid="text-sqft">
             <Square className="h-4 w-4" />
-            <span>{sqft} sqft</span>
+            <span>{area}</span>
           </div>
         </div>
       </div>

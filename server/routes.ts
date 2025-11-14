@@ -13,6 +13,38 @@ const chatRequestSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Properties endpoints
+  app.get("/api/properties", async (_req, res) => {
+    try {
+      const properties = await storage.getAllProperties();
+      res.json(properties);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      res.status(500).json({ error: "Failed to fetch properties" });
+    }
+  });
+
+  app.get("/api/properties/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        res.status(400).json({ error: "Invalid property ID" });
+        return;
+      }
+      
+      const property = await storage.getProperty(id);
+      if (!property) {
+        res.status(404).json({ error: "Property not found" });
+        return;
+      }
+      
+      res.json(property);
+    } catch (error) {
+      console.error("Error fetching property:", error);
+      res.status(500).json({ error: "Failed to fetch property" });
+    }
+  });
+
   // Chatbot endpoint
   app.post("/api/chat", async (req, res) => {
     try {

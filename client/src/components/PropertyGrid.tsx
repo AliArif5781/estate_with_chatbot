@@ -3,100 +3,35 @@ import PropertyCard from './PropertyCard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SlidersHorizontal } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import type { Property } from '@shared/schema';
 
-//todo: remove mock functionality
-interface Property {
-  id: string;
-  image: string;
-  price: string;
-  address: string;
-  city: string;
-  state: string;
-  beds: number;
-  baths: number;
-  sqft: string;
-  featured?: boolean;
-  newListing?: boolean;
-}
-
-const mockProperties: Property[] = [
-  {
-    id: '1',
-    image: '',
-    price: '549,000',
-    address: '123 Maple Street',
-    city: 'Portland',
-    state: 'OR',
-    beds: 4,
-    baths: 3,
-    sqft: '2,450',
-    newListing: true,
-  },
-  {
-    id: '2',
-    image: '',
-    price: '1,250,000',
-    address: '456 Ocean Drive',
-    city: 'Malibu',
-    state: 'CA',
-    beds: 5,
-    baths: 4,
-    sqft: '3,800',
-    featured: true,
-  },
-  {
-    id: '3',
-    image: '',
-    price: '875,000',
-    address: '789 Colonial Way',
-    city: 'Boston',
-    state: 'MA',
-    beds: 4,
-    baths: 3,
-    sqft: '3,200',
-  },
-  {
-    id: '4',
-    image: '',
-    price: '695,000',
-    address: '321 Downtown Plaza',
-    city: 'Seattle',
-    state: 'WA',
-    beds: 2,
-    baths: 2,
-    sqft: '1,850',
-  },
-  {
-    id: '5',
-    image: '',
-    price: '425,000',
-    address: '654 Craftsman Lane',
-    city: 'Austin',
-    state: 'TX',
-    beds: 3,
-    baths: 2,
-    sqft: '1,920',
-  },
-  {
-    id: '6',
-    image: '',
-    price: '1,850,000',
-    address: '987 Mediterranean Court',
-    city: 'Miami',
-    state: 'FL',
-    beds: 6,
-    baths: 5,
-    sqft: '4,500',
-    featured: true,
-  },
-];
-
-interface PropertyGridProps {
-  properties?: Property[];
-}
-
-export default function PropertyGrid({ properties = mockProperties }: PropertyGridProps) {
+export default function PropertyGrid() {
   const [sortBy, setSortBy] = useState('newest');
+  const { data: properties = [], isLoading } = useQuery<Property[]>({
+    queryKey: ['/api/properties'],
+  });
+
+  if (isLoading) {
+    return (
+      <section className="py-8 px-4">
+        <div className="container mx-auto max-w-7xl">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+            <div className="flex gap-2 w-full sm:w-auto">
+              <div className="h-10 w-24 bg-muted animate-pulse rounded" />
+              <div className="h-10 w-40 bg-muted animate-pulse rounded" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-[400px] bg-muted animate-pulse rounded-md" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-8 px-4">
