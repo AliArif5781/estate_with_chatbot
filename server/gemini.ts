@@ -54,11 +54,46 @@ interface Message {
   parts: { text: string }[];
 }
 
+async function validateQuestionRelevance(question: string): Promise<boolean> {
+  try {
+    const validatorModel = ai.getGenerativeModel({
+      model: "gemini-2.0-flash-exp",
+      systemInstruction: `You are a classifier. Determine if a question is related to Premier Properties real estate company, its properties, agents, services, or real estate in general. 
+      
+      Respond ONLY with "true" if the question is about:
+      - Premier Properties company or its services
+      - Properties, homes, real estate listings
+      - Real estate agents
+      - Buying, selling, or renting properties
+      - Real estate market or related topics
+      
+      Respond ONLY with "false" if the question is about anything else (weather, sports, general knowledge, etc.).
+      
+      Only output "true" or "false", nothing else.`,
+    });
+
+    const result = await validatorModel.generateContent(question);
+    const response = await result.response;
+    const answer = response.text().trim().toLowerCase();
+    
+    return answer === "true";
+  } catch (error) {
+    console.error("Question validation error:", error);
+    return true;
+  }
+}
+
 export async function chatWithGemini(
   userMessage: string,
   history: Message[] = []
 ): Promise<string> {
   try {
+    const isRelevant = await validateQuestionRelevance(userMessage);
+    
+    if (!isRelevant) {
+      return "I'm here to help with questions about Premier Properties and our real estate services. How can I assist you with finding your dream home or connecting with one of our expert agents?";
+    }
+
     const model = ai.getGenerativeModel({
       model: "gemini-2.0-flash-exp",
       systemInstruction: WEBSITE_CONTEXT,
@@ -75,7 +110,23 @@ export async function chatWithGemini(
 
     const result = await chat.sendMessage(userMessage);
     const response = await result.response;
-    return response.text() || "I'm sorry, I couldn't process that. Please try again.";
+    const botResponse = response.text() || "I'm sorry, I couldn't process that. Please try again.";
+    
+    const redirectPhrases = [
+      "I'm here to help with questions about Premier Properties",
+      "politely say:",
+      "outside of Premier Properties"
+    ];
+    
+    const isRedirect = redirectPhrases.some(phrase => 
+      botResponse.toLowerCase().includes(phrase.toLowerCase())
+    );
+    
+    if (isRedirect && !isRelevant) {
+      return "I'm here to help with questions about Premier Properties and our real estate services. How can I assist you with finding your dream home or connecting with one of our expert agents?";
+    }
+    
+    return botResponse;
   } catch (error) {
     console.error("Gemini API error:", error);
     throw new Error("Failed to get response from chatbot");
