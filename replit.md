@@ -36,13 +36,13 @@ Preferred communication style: Simple, everyday language.
 - Custom hooks for mobile detection and toast notifications
 
 **Key Features**
-- Property browsing with filtering and sorting capabilities
+- Property browsing with filtering and sorting capabilities from PostgreSQL database
 - Agent profiles with ratings and specializations
 - AI-powered chatbot for customer support
 - Responsive design with mobile-first approach
 - Hero section with property search
-- Featured properties showcase
-- Mock data structure ready for backend integration
+- Featured properties showcase loaded from API endpoints
+- Real-time data fetching using React Query
 
 ### Backend Architecture
 
@@ -53,6 +53,7 @@ Preferred communication style: Simple, everyday language.
 
 **API Design**
 - RESTful endpoints under `/api` prefix
+- Properties endpoints (`GET /api/properties`, `GET /api/properties/:id`) for property data
 - Chat endpoint (`POST /api/chat`) for AI chatbot integration
 - Zod schemas for request validation
 - JSON request/response format with error handling
@@ -76,19 +77,27 @@ Preferred communication style: Simple, everyday language.
 - Migration support configured via drizzle-kit
 
 **Schema Design**
-- Users table with username/password fields
-- UUID primary keys with PostgreSQL's gen_random_uuid()
+- Users table with username/password fields (UUID primary keys)
+- Properties table with complete property information:
+  - id (integer primary key)
+  - title, price, location, type, area, description
+  - bedrooms, bathrooms (integer)
+  - amenities (text array)
+  - yearBuilt (integer)
+  - image reference
 - Zod schemas for validation derived from Drizzle schemas
 
-**Storage Abstraction**
-- IStorage interface defining CRUD operations
-- MemStorage in-memory implementation for development/testing
-- Designed to swap between in-memory and database implementations
+**Storage Implementation**
+- IStorage interface defining CRUD operations for users and properties
+- DbStorage implementation using Drizzle ORM with Neon HTTP driver
+- Direct PostgreSQL database access for all data operations
+- Type-safe database queries with proper error handling
 
 **Current State**
-- Database connection configured but currently using in-memory storage
-- Schema defined and ready for database migration
-- Mock data in frontend components (properties, agents) awaiting database integration
+- Database fully configured and actively used for property data
+- 5 properties seeded in database (apartments, villas, condos, townhouses, penthouses)
+- Frontend components fetch live data from API endpoints
+- React Query handles data fetching, caching, and loading states
 
 ### External Dependencies
 
