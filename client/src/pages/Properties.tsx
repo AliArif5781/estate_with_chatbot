@@ -1,6 +1,7 @@
 import Header from '@/components/Header';
 import PropertyGrid from '@/components/PropertyGrid';
 import Footer from '@/components/Footer';
+import Chatbot from '@/components/Chatbot';
 import suburbanHome from '@assets/generated_images/Modern_suburban_family_home_da32e32b.png';
 import waterfrontVilla from '@assets/generated_images/Waterfront_luxury_villa_93fdeb3d.png';
 import colonialHouse from '@assets/generated_images/Classic_colonial_house_5f1f450a.png';
@@ -104,6 +105,7 @@ export default function Properties() {
         <PropertyGrid properties={allProperties} />
       </main>
       <Footer />
+      <Chatbot />
     </div>
   );
 }
