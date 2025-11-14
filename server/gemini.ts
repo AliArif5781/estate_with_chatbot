@@ -57,7 +57,7 @@ interface Message {
 async function validateQuestionRelevance(question: string): Promise<boolean> {
   try {
     const validatorModel = ai.getGenerativeModel({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-1.5-flash",
       systemInstruction: `You are a classifier. Determine if a question is related to Premier Properties real estate company, its properties, agents, services, or real estate in general. 
       
       Return JSON with "relevant" field as true if the question is about:
@@ -93,7 +93,7 @@ async function validateQuestionRelevance(question: string): Promise<boolean> {
 async function validateResponseRelevance(responseText: string): Promise<boolean> {
   try {
     const validatorModel = ai.getGenerativeModel({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-1.5-flash",
       systemInstruction: `You are a content classifier. Analyze if the given text is specifically about Premier Properties real estate company, their services, properties, or agents.
       
       Return JSON with "relevant" field as true if the text discusses:
@@ -146,7 +146,7 @@ export async function chatWithGemini(
     }
 
     const model = ai.getGenerativeModel({
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-1.5-flash",
       systemInstruction: WEBSITE_CONTEXT,
     });
 
