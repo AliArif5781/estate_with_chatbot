@@ -60,26 +60,75 @@ async function validateQuestionRelevance(question: string): Promise<boolean> {
       model: "gemini-2.0-flash-exp",
       systemInstruction: `You are a classifier. Determine if a question is related to Premier Properties real estate company, its properties, agents, services, or real estate in general. 
       
-      Respond ONLY with "true" if the question is about:
+      Return JSON with "relevant" field as true if the question is about:
       - Premier Properties company or its services
       - Properties, homes, real estate listings
       - Real estate agents
       - Buying, selling, or renting properties
       - Real estate market or related topics
       
-      Respond ONLY with "false" if the question is about anything else (weather, sports, general knowledge, etc.).
+      Return JSON with "relevant" field as false if the question is about anything else (weather, sports, general knowledge, etc.).
       
-      Only output "true" or "false", nothing else.`,
+      Example: {"relevant": true} or {"relevant": false}`,
     });
 
-    const result = await validatorModel.generateContent(question);
-    const response = await result.response;
-    const answer = response.text().trim().toLowerCase();
+    const result = await validatorModel.generateContent({
+      contents: [{ role: "user", parts: [{ text: question }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+      },
+    });
     
-    return answer === "true";
+    const response = await result.response;
+    const text = response.text().trim();
+    const parsed = JSON.parse(text);
+    
+    return parsed.relevant === true;
   } catch (error) {
     console.error("Question validation error:", error);
-    return true;
+    return false;
+  }
+}
+
+async function validateResponseRelevance(responseText: string): Promise<boolean> {
+  try {
+    const validatorModel = ai.getGenerativeModel({
+      model: "gemini-2.0-flash-exp",
+      systemInstruction: `You are a content classifier. Analyze if the given text is specifically about Premier Properties real estate company, their services, properties, or agents.
+      
+      Return JSON with "relevant" field as true if the text discusses:
+      - Premier Properties company, their services, or team
+      - Specific properties, homes, or real estate listings
+      - Real estate agents (Sarah Johnson, Michael Chen, Emily Rodriguez)
+      - Real estate services (buying, selling, renting properties)
+      - Property features, prices, locations
+      - General real estate advice in the context of Premier Properties
+      
+      Return JSON with "relevant" field as false if the text discusses:
+      - Unrelated topics (weather, sports, general knowledge, technology, etc.)
+      - Generic advice not related to real estate
+      - Other companies or services not related to real estate
+      
+      Also return true if the text is a polite redirect message about staying on topic.
+      
+      Example: {"relevant": true} or {"relevant": false}`,
+    });
+
+    const result = await validatorModel.generateContent({
+      contents: [{ role: "user", parts: [{ text: `Classify this response: "${responseText}"` }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+      },
+    });
+    
+    const response = await result.response;
+    const text = response.text().trim();
+    const parsed = JSON.parse(text);
+    
+    return parsed.relevant === true;
+  } catch (error) {
+    console.error("Response validation error:", error);
+    return false;
   }
 }
 
@@ -87,11 +136,13 @@ export async function chatWithGemini(
   userMessage: string,
   history: Message[] = []
 ): Promise<string> {
+  const REDIRECT_MESSAGE = "I'm here to help with questions about Premier Properties and our real estate services. How can I assist you with finding your dream home or connecting with one of our expert agents?";
+  
   try {
-    const isRelevant = await validateQuestionRelevance(userMessage);
+    const isQuestionRelevant = await validateQuestionRelevance(userMessage);
     
-    if (!isRelevant) {
-      return "I'm here to help with questions about Premier Properties and our real estate services. How can I assist you with finding your dream home or connecting with one of our expert agents?";
+    if (!isQuestionRelevant) {
+      return REDIRECT_MESSAGE;
     }
 
     const model = ai.getGenerativeModel({
@@ -112,18 +163,11 @@ export async function chatWithGemini(
     const response = await result.response;
     const botResponse = response.text() || "I'm sorry, I couldn't process that. Please try again.";
     
-    const redirectPhrases = [
-      "I'm here to help with questions about Premier Properties",
-      "politely say:",
-      "outside of Premier Properties"
-    ];
+    const isResponseRelevant = await validateResponseRelevance(botResponse);
     
-    const isRedirect = redirectPhrases.some(phrase => 
-      botResponse.toLowerCase().includes(phrase.toLowerCase())
-    );
-    
-    if (isRedirect && !isRelevant) {
-      return "I'm here to help with questions about Premier Properties and our real estate services. How can I assist you with finding your dream home or connecting with one of our expert agents?";
+    if (!isResponseRelevant) {
+      console.warn(`Off-topic response detected for question: "${userMessage}"`);
+      return REDIRECT_MESSAGE;
     }
     
     return botResponse;
