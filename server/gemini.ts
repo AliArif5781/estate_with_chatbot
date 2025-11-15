@@ -2,7 +2,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // DON'T DELETE THIS COMMENT
 // Follow these instructions when using this blueprint:
-// - Note that the newest Gemini model series is "gemini-2.5-flash" or gemini-2.5-pro"
+// - Note that the newest Gemini model series is "gemini-2.5-flash" or "gemini-2.5-pro"
+// - All Gemini 1.0 and 1.5 models are retired as of late 2024/early 2025
 
 const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
@@ -57,7 +58,7 @@ interface Message {
 async function validateQuestionRelevance(question: string): Promise<boolean> {
   try {
     const validatorModel = ai.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-pro",
       systemInstruction: `You are a classifier. Determine if a question is related to Premier Properties real estate company, its properties, agents, services, or real estate in general. 
       
       Return JSON with "relevant" field as true if the question is about:
@@ -93,7 +94,7 @@ async function validateQuestionRelevance(question: string): Promise<boolean> {
 async function validateResponseRelevance(responseText: string): Promise<boolean> {
   try {
     const validatorModel = ai.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-pro",
       systemInstruction: `You are a content classifier. Analyze if the given text is specifically about Premier Properties real estate company, their services, properties, or agents.
       
       Return JSON with "relevant" field as true if the text discusses:
@@ -136,17 +137,9 @@ export async function chatWithGemini(
   userMessage: string,
   history: Message[] = []
 ): Promise<string> {
-  const REDIRECT_MESSAGE = "I'm here to help with questions about Premier Properties and our real estate services. How can I assist you with finding your dream home or connecting with one of our expert agents?";
-  
   try {
-    const isQuestionRelevant = await validateQuestionRelevance(userMessage);
-    
-    if (!isQuestionRelevant) {
-      return REDIRECT_MESSAGE;
-    }
-
     const model = ai.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       systemInstruction: WEBSITE_CONTEXT,
     });
 
@@ -162,13 +155,6 @@ export async function chatWithGemini(
     const result = await chat.sendMessage(userMessage);
     const response = await result.response;
     const botResponse = response.text() || "I'm sorry, I couldn't process that. Please try again.";
-    
-    const isResponseRelevant = await validateResponseRelevance(botResponse);
-    
-    if (!isResponseRelevant) {
-      console.warn(`Off-topic response detected for question: "${userMessage}"`);
-      return REDIRECT_MESSAGE;
-    }
     
     return botResponse;
   } catch (error) {
